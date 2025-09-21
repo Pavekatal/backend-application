@@ -1,6 +1,5 @@
 require("dotenv").config();
 const PORT = process.env.PORT || 3000;
-const HOST = "http://127.0.0.1";
 const http = require("http");
 const getUsers = require("./modules/users");
 
