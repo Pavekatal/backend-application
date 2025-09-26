@@ -4,53 +4,44 @@ const http = require("http");
 const getUsers = require("./modules/users");
 
 const server = http.createServer((request, response) => {
-  const url = new URL(request.url, "http://127.0.0.1");
-  const name = url.searchParams.get("hello");
+  const url = new URL(request.url, `http://${request.headers.host}`);
+  const searchParams = url.searchParams;
+  console.log("searchParams:");
+  const name = searchParams.get("hello");
 
-  if (request.url === "/") {
-    response.status = 200;
-    response.statusMessage = "OK";
-    response.header = "Content-Type: text/plain";
-    response.write("Hello, world!");
-    response.end();
-  } else if (name) {
-    response.status = 200;
-    response.statusMessage = "OK";
-    response.header = "Content-Type: text/plain";
-    response.write(`Hello, ${name}!`);
-    response.end();
-
-    return;
-  } else if (name === "") {
-    response.statusCode = 400;
-    response.statusMessage = "Bad request";
-    response.header = "Content-Type: text/plain";
-    response.write("Enter a name");
-    response.end();
-
-    return;
-  } else if (request.url === "/?users") {
-    response.status = 200;
-    response.statusMessage = "OK";
-    response.header = "Content-Type: application/json";
-    response.write(getUsers());
-    response.end();
-
-    return;
-  } else if (request.url === "/favicon.ico") {
-    response.writeHead(200, { "Content-Type": "image/x-icon" });
-    response.end();
-
-    return;
-  } else {
-    response.statusCode = 500;
-    response.statusMessage = "Server Error";
-    response.header = "Content-Type: text/plain";
-    response.write("");
-    response.end();
-
+  if (name === "") {
+    response.writeHead(400, { "Content-type": "text/plain" });
+    response.end("Enter a name");
     return;
   }
+
+  if (name) {
+    response.writeHead(200, { "Content-Type": "text/plain" });
+    response.end(`Hello, ${name}!`);
+    return;
+  }
+
+  if (searchParams.has("users")) {
+    response.writeHead(200, { "Content-Type": "application/json" });
+    response.end(getUsers());
+    return;
+  }
+
+  if (url.pathname === "/") {
+    response.writeHead(200, { "Content-type": "text/plain" });
+    response.end("Hello, world!");
+    return;
+  }
+
+  if (url.pathname === "/favicon.ico") {
+    response.writeHead(200, { "Content-Type": "image/x-icon" });
+    response.end();
+    return;
+  }
+
+  response.writeHead(500, { "Content-type": "text/plain" });
+  response.end("");
+  return;
 });
 
 server.listen(PORT, () => {
