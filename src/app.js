@@ -6,18 +6,20 @@ const getUsers = require("./modules/users");
 const server = http.createServer((request, response) => {
   const url = new URL(request.url, `http://${request.headers.host}`);
   const searchParams = url.searchParams;
-  console.log("searchParams:");
-  const name = searchParams.get("hello");
 
-  if (name === "") {
-    response.writeHead(400, { "Content-type": "text/plain" });
-    response.end("Enter a name");
+  if (url.pathname === "/favicon.ico") {
+    response.writeHead(200, { "Content-Type": "image/x-icon" });
+    response.end();
     return;
   }
 
-  if (name) {
-    response.writeHead(200, { "Content-Type": "text/plain" });
-    response.end(`Hello, ${name}!`);
+  const otherParams = Array.from(searchParams.keys()).some(
+    (key) => key !== "hello" && key !== "users"
+  );
+
+  if (otherParams) {
+    response.writeHead(500, { "Content-Type": "text/plain" });
+    response.end("");
     return;
   }
 
@@ -27,21 +29,27 @@ const server = http.createServer((request, response) => {
     return;
   }
 
+  if (searchParams.has("hello")) {
+    const name = searchParams.get("hello");
+    if (name === "") {
+      response.writeHead(400, { "Content-type": "text/plain" });
+      response.end("Enter a name");
+    } else {
+      response.writeHead(200, { "Content-Type": "text/plain" });
+      response.end(`Hello, ${name}!`);
+    }
+    return;
+  }
+
   if (url.pathname === "/") {
     response.writeHead(200, { "Content-type": "text/plain" });
     response.end("Hello, world!");
     return;
-  }
-
-  if (url.pathname === "/favicon.ico") {
-    response.writeHead(200, { "Content-Type": "image/x-icon" });
-    response.end();
+  } else {
+    response.writeHead(500, { "Content-Type": "text/plain" });
+    response.end("");
     return;
   }
-
-  response.writeHead(500, { "Content-type": "text/plain" });
-  response.end("");
-  return;
 });
 
 server.listen(PORT, () => {
